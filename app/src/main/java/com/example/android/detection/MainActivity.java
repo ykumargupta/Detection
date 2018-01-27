@@ -3,18 +3,25 @@ package com.example.android.detection;
 import android.Manifest;
 import android.app.Activity;
 
+import android.app.Fragment;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.media.Image.Plane;
 import android.os.HandlerThread;
+import android.util.Size;
+import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.example.android.detection.env.Logger;
 
-public class MainActivity extends Activity implements OnImageAvailableListener {
+import java.nio.ByteBuffer;
+
+public abstract class MainActivity extends Activity implements OnImageAvailableListener {
 
     private static final com.example.android.detection.env.Logger LOGGER = new com.example.android.detection.env.Logger();
 
@@ -127,6 +134,74 @@ public class MainActivity extends Activity implements OnImageAvailableListener {
             if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA) || shouldShowRequestPermissionRationale(PERMISSION_STORAGE)) {
                 Toast.makeText(MainActivity.this, "Camera AND storage permission are required for this demo", Toast.LENGTH_LONG).show();
             }
-            requestPermissions(new String[] {PERMISSION_CAMERA, PERMISSION_STORAGE}, PERMISSIONS_REQUEST);
+            requestPermissions(new String[]{PERMISSION_CAMERA, PERMISSION_STORAGE}, PERMISSIONS_REQUEST);
         }
     }
+
+    protected void setFragment() {
+        final Fragment fragment =
+                com.example.android.detection.CameraConnectionFragment.newInstance(
+                        new com.example.android.detection.CameraConnectionFragment.ConnectionCallback() {
+                            @Override
+                            public void onPreviewSizeChosen(final Size size, final int rotation) {
+                                MainActivity.this.onPreviewSizeChosen(size, rotation);
+                            }
+                        },
+                        this,
+                        getLayoutId(),
+                        getDesiredPreviewFrameSize());
+
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
+    }
+    protected void fillBytes(final Plane[] planes, final byte[][] yuvBytes) {
+        // Because of the variable row stride it's not possible to know in
+        // advance the actual necessary dimensions of the yuv planes.
+        for (int i = 0; i < planes.length; ++i) {
+            final ByteBuffer buffer = planes[i].getBuffer();
+            if (yuvBytes[i] == null) {
+                LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
+                yuvBytes[i] = new byte[buffer.capacity()];
+            }
+            buffer.get(yuvBytes[i]);
+        }
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /*public void requestRender() {
+        final OverlayView overlay = (OverlayView) findViewById(R.id.debug_overlay);
+        if (overlay != null) {
+            overlay.postInvalidate();
+        }
+    }
+
+    public void addCallback(final OverlayView.DrawCallback callback) {
+        final OverlayView overlay = (OverlayView) findViewById(R.id.debug_overlay);
+        if (overlay != null) {
+            overlay.addCallback(callback);
+        }
+    }*/
+
+    public void onSetDebug(final boolean debug) {}
+
+   /* @Override
+    public boolean onKeyDown(final int keyCode, final KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            debug = !debug;
+            requestRender();
+            onSetDebug(debug);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+*/
+    protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
+    protected abstract int getLayoutId();
+    protected abstract Size getDesiredPreviewFrameSize();
+
+}

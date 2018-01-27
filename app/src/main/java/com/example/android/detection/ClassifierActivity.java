@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package org.tensorflow.demo;
+package com.example.android.detection;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -31,15 +32,16 @@ import android.os.Trace;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.Display;
+
+import com.example.android.detection.OverlayView.DrawCallback;
+import com.example.android.detection.env.BorderedText;
+import com.example.android.detection.env.ImageUtils;
+import com.example.android.detection.env.Logger;
+
 import java.util.List;
 import java.util.Vector;
-import org.tensorflow.demo.OverlayView.DrawCallback;
-import org.tensorflow.demo.env.BorderedText;
-import org.tensorflow.demo.env.ImageUtils;
-import org.tensorflow.demo.env.Logger;
-import org.tensorflow.demo.R;
 
-public class ClassifierActivity extends CameraActivity implements OnImageAvailableListener {
+public class ClassifierActivity extends MainActivity implements OnImageAvailableListener {
   private static final Logger LOGGER = new Logger();
 
   // These are the settings for the original v1 Inception model. If you want to
@@ -117,8 +119,11 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
   }
 
   private static final float TEXT_SIZE_DIP = 10;
-
   @Override
+  public void onPreviewSizeChosen(final Size size, final int rotation) {}
+
+
+  /*@Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
     final float textSizePx =
         TypedValue.applyDimension(
@@ -172,7 +177,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
           }
         });
   }
-
+    */
   @Override
   public void onImageAvailable(final ImageReader reader) {
     Image image = null;
@@ -228,7 +233,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
       ImageUtils.saveBitmap(croppedBitmap);
     }
 
-    runInBackground(
+    /*runInBackground(
         new Runnable() {
           @Override
           public void run() {
@@ -241,7 +246,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
             requestRender();
             computing = false;
           }
-        });
+        });*/
 
     Trace.endSection();
   }
